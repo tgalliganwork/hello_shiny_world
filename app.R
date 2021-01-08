@@ -18,18 +18,21 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
+    dataset <- reactive({
+        input$x * input$y
+    })
+    
     output$product <- renderText({ 
-        product <- input$x * input$y
-        product
+        product <- dataset()
     })
-    output$product_plus5 <- renderText({ 
-        product <- input$x * input$y
-        product + 5
-    })
-    output$product_plus10 <- renderText({ 
-        product <- input$x * input$y
-        product + 10
-    })
+   output$product_plus5 <- renderText({
+      product <- dataset()
+      product + 5
+   })
+   output$product_plus10 <- renderText({
+       product <- dataset()
+       product + 10
+   })
 }
 
 shinyApp(ui, server)
