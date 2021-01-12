@@ -10,7 +10,25 @@
 library(shiny)
 library(ggplot2)
 
-datasets <- data(package = "ggplot2")$results[c(2, 4, 10), "Item"]
+histogram <- function(x1, x2, binwidth = 0.1, xlim = c(-3, 3)) {
+  df <- data.frame(
+    x = c(x1, x2),
+    g = c(rep("x1", length(x1)), rep("x2", length(x2)))
+  )
+  
+  ggplot(df, aes(x, fill = g)) +
+    geom_histogram(binwidth = binwidth) +
+    coord_cartesian(xlim = xlim)
+}
+
+t_test <- function(x1, x2) {
+  test <- t.test(x1, x2)
+  
+  sprintf(
+    "p value: %0.3f\n[%0.2f, %0.2f]",
+    test$p.value, test$conf.int[1], test$conf.int[2]
+  )
+}
 
 ui <- fluidPage(
   fluidRow(
@@ -37,21 +55,18 @@ ui <- fluidPage(
     column(3, verbatimTextOutput("ttest"))
   )
 )
-)
 
 server <- function(input, output, session) {
+  x1 <- reactive(rnorm(input$n1, input$mean1, input$sd1))
+  x2 <- reactive(rnorm(input$n2, input$mean2, input$sd2))
+  
+  
   output$hist <- renderPlot({
-    x1 <- rnorm(input$n1, input$mean1, input$sd1)
-    x2 <- rnorm(input$n2, input$mean2, input$sd2)
-    
-    histogram(x1, x2, binwidth = input$binwidth, xlim = input$range)
+    histogram(x1(), x2(), binwidth = input$binwidth, xlim = input$range)
   }, res = 96)
   
   output$ttest <- renderText({
-    x1 <- rnorm(input$n1, input$mean1, input$sd1)
-    x2 <- rnorm(input$n2, input$mean2, input$sd2)
-    
-    t_test(x1, x2)
+    t_test(x1(), x2())
   })
 }
 shinyApp(ui, server)
